@@ -48,6 +48,24 @@
             box-shadow: 0 40px 100px var(--shadow-color);
         }
 
+        .news-container {
+            position: fixed; top: 2rem; right: 2rem; width: 320px; z-index: 100;
+            background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--card-border); border-radius: 24px; padding: 1.5rem;
+            box-shadow: 0 40px 100px var(--shadow-color);
+            max-height: 80vh; overflow-y: auto;
+            scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.1) transparent;
+        }
+        .news-container::-webkit-scrollbar { width: 5px; }
+        .news-container::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+        .news-header { font-weight: 700; font-size: 1.25rem; margin-bottom: 1rem; color: var(--accent-color); border-bottom: 1px solid var(--card-border); padding-bottom: 0.5rem; }
+        .news-item { margin-bottom: 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 1rem; }
+        .news-item:last-child { border: none; }
+        .news-title { font-size: 0.95rem; font-weight: 600; line-height: 1.4; margin-bottom: 0.3rem; color: #fff; cursor: pointer; transition: 0.2s; }
+        .news-title:hover { color: var(--accent-color); }
+        .news-meta { font-size: 0.75rem; color: var(--text-secondary); display: flex; gap: 0.5rem; }
+        .news-tag { background: rgba(56, 189, 248, 0.1); color: var(--accent-color); padding: 0.1rem 0.4rem; border-radius: 4px; font-size: 0.65rem; text-transform: uppercase; }
+
         .search-box { display: flex; background: rgba(255,255,255,0.05); border: 1px solid var(--card-border); border-radius: 16px; padding: 0.4rem; margin-bottom: 1.5rem; }
         .search-box input { background: transparent; border: none; outline: none; color: #fff; padding: 0.6rem 1rem; width: 100%; font-size: 1rem; }
         .search-box button { background: var(--accent-color); color: #000; border: none; border-radius: 12px; padding: 0.6rem; cursor: pointer; }
@@ -107,7 +125,37 @@
             <button id="skip-btn" onclick="useStaticFallback()">Skip to Static Dashboard</button>
         </div>
     </div>
-    <div class="overlay"></div>
+    <div class="news-container">
+        <div class="news-header">Global Weather News</div>
+        <div id="news-feed">
+            <!-- Mock News Items for High-End Look -->
+            <div class="news-item">
+                <span class="news-tag">Satellite</span>
+                <div class="news-title">NOAA confirms abnormal sea surface temperatures in North Atlantic.</div>
+                <div class="news-meta">2h ago • Ocean Systems</div>
+            </div>
+            <div class="news-item">
+                <span class="news-tag">Solar</span>
+                <div class="news-title">Substantial G4 magnetic storm observed by Deep Space Climate Observatory.</div>
+                <div class="news-meta">5h ago • Space Weather</div>
+            </div>
+            <div class="news-item">
+                <span class="news-tag">Atmosphere</span>
+                <div class="news-title">New study reveals atmospheric river intensity to increase by 25% this decade.</div>
+                <div class="news-meta">8h ago • Researchers</div>
+            </div>
+            <div class="news-item">
+                <span class="news-tag">Climate</span>
+                <div class="news-title">Artic ice shelf observations show unprecedented midnight sun melting patterns.</div>
+                <div class="news-meta">12h ago • Polar Watch</div>
+            </div>
+            <div class="news-item">
+                <span class="news-tag">Tech</span>
+                <div class="news-title">AI-driven weather forecasting models reach 98.4% accuracy in 24h predictions.</div>
+                <div class="news-meta">1d ago • Innovation</div>
+            </div>
+        </div>
+    </div>
 
     <div class="app-container">
         <div class="search-box">
