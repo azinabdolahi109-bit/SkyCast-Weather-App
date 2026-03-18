@@ -4,6 +4,7 @@ const weatherDisplay = document.getElementById('weather-display');
 const emptyState = document.getElementById('empty-state');
 const errorState = document.getElementById('error-state');
 const loader = document.getElementById('loader');
+const bgImage = document.getElementById('bg-image');
 
 // Elements to update
 const cityNameEl = document.getElementById('city-name');
@@ -16,44 +17,23 @@ const windEl = document.getElementById('wind-speed');
 const feelsLikeEl = document.getElementById('feels-like');
 const timezoneEl = document.getElementById('timezone');
 
-// Map Initialization
-let map;
-let marker;
-
-function initMap() {
-    if (typeof L === 'undefined') return;
-    map = L.map('map', {
-        zoomControl: false,
-        attributionControl: false
-    }).setView([51.505, -0.09], 10);
-
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}.png', {
-        maxZoom: 19,
-        attribution: '&copy; OpenStreetMap'
-    }).addTo(map);
-
-    setTimeout(() => {
-        if (map) map.invalidateSize();
-    }, 500);
-}
-
 const WMO_MAP = {
-    0: { desc: "Clear Sky", icon: "☀️" },
-    1: { desc: "Mainly Clear", icon: "🌤️" },
-    2: { desc: "Partly Cloudy", icon: "⛅" },
-    3: { desc: "Overcast", icon: "☁️" },
-    45: { desc: "Fog", icon: "🌫️" },
-    48: { desc: "Depositing Rime Fog", icon: "🌫️" },
-    51: { desc: "Light Drizzle", icon: "🌦️" },
-    53: { desc: "Moderate Drizzle", icon: "🌦️" },
-    55: { desc: "Dense Drizzle", icon: "🌦️" },
-    61: { desc: "Slight Rain", icon: "🌧️" },
-    63: { desc: "Moderate Rain", icon: "🌧️" },
-    65: { desc: "Heavy Rain", icon: "⛈️" },
-    71: { desc: "Slight Snow", icon: "🌨️" },
-    73: { desc: "Moderate Snow", icon: "🌨️" },
-    75: { desc: "Heavy Snow", icon: "❄️" },
-    95: { desc: "Thunderstorm", icon: "⚡" },
+    0: { desc: "Clear Sky", icon: "☀️", imgId: "1464822759023-fed622ff2c3b" },
+    1: { desc: "Mainly Clear", icon: "🌤️", imgId: "1475924156734-496f6cac6ec1" },
+    2: { desc: "Partly Cloudy", icon: "⛅", imgId: "1534067783941-43282424adaa" },
+    3: { desc: "Overcast", icon: "☁️", imgId: "1483977399921-6cfcf3a4d8d6" },
+    45: { desc: "Fog", icon: "🌫️", imgId: "1541675154750-0444c7d51e8b" },
+    48: { desc: "Depositing Rime Fog", icon: "🌫️", imgId: "1485236715598-ada2400309e6" },
+    51: { desc: "Light Drizzle", icon: "🌦️", imgId: "1541919329513-35f7af297129" },
+    53: { desc: "Moderate Drizzle", icon: "🌦️", imgId: "1541919329513-35f7af297129" },
+    55: { desc: "Dense Drizzle", icon: "🌦️", imgId: "1534274988757-a28bf1f53c17" },
+    61: { desc: "Slight Rain", icon: "🌧️", imgId: "1515694346937-94d85ed41d6f" },
+    63: { desc: "Moderate Rain", icon: "🌧️", imgId: "1515694346937-94d85ed41d6f" },
+    65: { desc: "Heavy Rain", icon: "⛈️", imgId: "1534274988757-a28bf1f53c17" },
+    71: { desc: "Slight Snow", icon: "🌨️", imgId: "1483921020237-2ff51e8e4b22" },
+    73: { desc: "Moderate Snow", icon: "🌨️", imgId: "1483921020237-2ff51e8e4b22" },
+    75: { desc: "Heavy Snow", icon: "❄️", imgId: "1483664845534-750c74127ce1" },
+    95: { desc: "Thunderstorm", icon: "⚡", imgId: "1605727282300-24430156d81b" },
 };
 
 async function getCoordinates(city) {
@@ -81,9 +61,14 @@ async function getWeatherData(lat, lon) {
     return await response.json();
 }
 
+function updateBackground(imgId) {
+    const imageUrl = `https://images.unsplash.com/photo-${imgId}?auto=format&fit=crop&w=1920&q=80`;
+    bgImage.style.backgroundImage = `url('${imageUrl}')`;
+}
+
 function updateUI(weather, location) {
     const current = weather.current;
-    const wmo = WMO_MAP[current.weather_code] || { desc: "Unknown", icon: "❓" };
+    const wmo = WMO_MAP[current.weather_code] || { desc: "Unknown", icon: "❓", imgId: "1464822759023-fed622ff2c3b" };
 
     cityNameEl.textContent = location.name;
     dateEl.textContent = new Date().toLocaleDateString('en-US', {
@@ -94,11 +79,7 @@ function updateUI(weather, location) {
 
     tempEl.textContent = Math.round(current.temperature_2m);
     descEl.textContent = wmo.desc;
-
-    // Instead of a real icon URL (which can be flaky without a key), 
-    // we use a large high-quality emoji as a placeholder or a font-based icon.
-    // However, for a "premium" feel, let's use a nice SVG icon based on condition.
-    // For this simple app, we'll use a dynamic character and some CSS glow.
+    
     iconEl.alt = wmo.desc;
     iconEl.parentElement.innerHTML = `<span style="font-size: 80px; filter: drop-shadow(0 0 10px rgba(56, 189, 248, 0.4))">${wmo.icon}</span>`;
 
@@ -107,28 +88,8 @@ function updateUI(weather, location) {
     feelsLikeEl.textContent = `${Math.round(current.apparent_temperature)}°C`;
     timezoneEl.textContent = weather.timezone_abbreviation;
 
-    // Update Map
-    const lat = location.lat;
-    const lon = location.lon;
-
-    map.flyTo([lat, lon], 12, {
-        animate: true,
-        duration: 1.5
-    });
-
-    const weatherIcon = L.divIcon({
-        html: `<div style="font-size: 40px; text-shadow: 0 0 10px rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; width: 50px; height: 50px;">${wmo.icon}</div>`,
-        className: 'custom-weather-icon',
-        iconSize: [50, 50],
-        iconAnchor: [25, 25]
-    });
-
-    if (marker) {
-        marker.setLatLng([lat, lon]);
-        marker.setIcon(weatherIcon);
-    } else {
-        marker = L.marker([lat, lon], { icon: weatherIcon }).addTo(map);
-    }
+    // Update Background
+    updateBackground(wmo.imgId);
 
     weatherDisplay.classList.remove('hidden');
     emptyState.classList.add('hidden');
@@ -139,7 +100,6 @@ async function handleSearch() {
     const city = cityInput.value.trim();
     if (!city) return;
 
-    // UI Feedback
     loader.classList.remove('hidden');
     weatherDisplay.classList.add('hidden');
     emptyState.classList.add('hidden');
@@ -155,10 +115,9 @@ async function handleSearch() {
 
         const weather = await getWeatherData(coords.lat, coords.lon);
         updateUI(weather, coords);
-
-        // Success animation re-trigger
+        
         weatherDisplay.classList.remove('animate-fade-in');
-        void weatherDisplay.offsetWidth; // Trigger reflow
+        void weatherDisplay.offsetWidth; 
         weatherDisplay.classList.add('animate-fade-in');
 
     } catch (err) {
@@ -175,8 +134,4 @@ cityInput.addEventListener('keypress', (e) => {
     if (e.key === 'Enter') handleSearch();
 });
 
-// Initialize map and focus input on load
-window.addEventListener('load', () => {
-    initMap();
-    cityInput.focus();
-});
+window.addEventListener('load', () => cityInput.focus());
