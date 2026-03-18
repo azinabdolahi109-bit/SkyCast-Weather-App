@@ -66,6 +66,13 @@
         .stat-info span { display: block; font-weight: 600; font-size: 1rem; }
         .stat-info p { font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase; }
 
+        .forecast-container { margin-top: 1.5rem; border-top: 1px solid var(--card-border); padding-top: 1.5rem; }
+        .forecast-grid { display: flex; justify-content: space-between; gap: 0.5rem; }
+        .forecast-day { flex: 1; background: rgba(255,255,255,0.02); padding: 0.8rem 0.4rem; border-radius: 12px; text-align: center; }
+        .forecast-day p { font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.3rem; }
+        .forecast-icon { font-size: 1.5rem; margin-bottom: 0.3rem; }
+        .forecast-temp { font-weight: 600; font-size: 0.9rem; }
+
         #loader { margin: 1rem 0; text-align: center; }
         .spinner { width: 30px; height: 30px; border: 3px solid rgba(255,255,255,0.1); border-top-color: var(--accent-color); border-radius: 50%; animation: spin 1s infinite linear; margin: 0 auto; }
         @keyframes spin { to { transform: rotate(360deg); } }
@@ -114,6 +121,14 @@
                     <div class="stat-item"><div class="stat-icon">💨</div><div class="stat-info"><span id="wind-speed">--</span><p>Wind</p></div></div>
                     <div class="stat-item"><div class="stat-icon">🌡️</div><div class="stat-info"><span id="feels-like">--</span><p>Feels</p></div></div>
                     <div class="stat-item"><div class="stat-icon">🕒</div><div class="stat-info"><span id="timezone">--</span><p>Zone</p></div></div>
+                </div>
+
+                <!-- 3-Day Forecast -->
+                <div class="forecast-container" id="forecast-box">
+                    <p style="text-align: left; font-size: 0.8rem; margin-bottom: 0.8rem; font-weight: 600; text-transform: uppercase; color: var(--accent-color);">Next 3 Days</p>
+                    <div class="forecast-grid" id="forecast-items">
+                        <!-- Filled by JS -->
+                    </div>
                 </div>
             </div>
         </main>
@@ -175,6 +190,47 @@
 
         function hideOverlay() { document.getElementById('loading-overlay').classList.add('fade-out'); }
 
+        async function getWeatherData(lat, lon) {
+            const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto`;
+            const wRes = await fetch(url);
+            return await wRes.json();
+        }
+
+        function updateUI(wData, location) {
+            const current = wData.current;
+            const info = WMO_MAP[current.weather_code] || { desc: "Unknown", icon: "❓" };
+
+            document.getElementById('city-name').textContent = location.name;
+            document.getElementById('current-date').textContent = new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' });
+            document.getElementById('temperature').textContent = Math.round(current.temperature_2m);
+            document.getElementById('weather-icon-box').textContent = info.icon;
+            document.getElementById('weather-description').textContent = info.desc;
+            document.getElementById('humidity').textContent = current.relative_humidity_2m + '%';
+            document.getElementById('wind-speed').textContent = current.wind_speed_10m + 'km/h';
+            document.getElementById('feels-like').textContent = Math.round(current.apparent_temperature) + '°C';
+            document.getElementById('timezone').textContent = wData.timezone_abbreviation;
+
+            // Render 3-Day Forecast
+            const forecastGrid = document.getElementById('forecast-items');
+            forecastGrid.innerHTML = '';
+            
+            for (let i = 1; i <= 3; i++) {
+                const date = new Date(wData.daily.time[i]);
+                const dayName = date.toLocaleDateString(undefined, { weekday: 'short' });
+                const dayWmo = WMO_MAP[wData.daily.weather_code[i]] || { icon: "❓" };
+                const maxTemp = Math.round(wData.daily.temperature_2m_max[i]);
+                const minTemp = Math.round(wData.daily.temperature_2m_min[i]);
+
+                forecastGrid.innerHTML += `
+                    <div class="forecast-day">
+                        <p>${dayName}</p>
+                        <div class="forecast-icon">${dayWmo.icon}</div>
+                        <div class="forecast-temp">${maxTemp}° / ${minTemp}°</div>
+                    </div>
+                `;
+            }
+        }
+
         async function handleSearch() {
             const city = document.getElementById('city-input').value.trim();
             if (!city) return;
@@ -193,22 +249,9 @@
                 if (!gData.length) throw new Error("City not found");
 
                 const { lat, lon, display_name } = gData[0];
-                const wUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m&timezone=auto`;
-                const wRes = await fetch(wUrl);
-                const wData = await wRes.json();
+                const wData = await getWeatherData(lat, lon);
                 
-                const current = wData.current;
-                const info = WMO_MAP[current.weather_code] || { desc: "Unknown", icon: "❓" };
-
-                document.getElementById('city-name').textContent = display_name.split(',')[0];
-                document.getElementById('current-date').textContent = new Date().toLocaleDateString();
-                document.getElementById('temperature').textContent = Math.round(current.temperature_2m);
-                document.getElementById('weather-icon-box').textContent = info.icon;
-                document.getElementById('weather-description').textContent = info.desc;
-                document.getElementById('humidity').textContent = current.relative_humidity_2m + '%';
-                document.getElementById('wind-speed').textContent = current.wind_speed_10m + 'km/h';
-                document.getElementById('feels-like').textContent = Math.round(current.apparent_temperature) + '°C';
-                document.getElementById('timezone').textContent = wData.timezone_abbreviation;
+                updateUI(wData, { name: display_name.split(',')[0], lat: parseFloat(lat), lon: parseFloat(lon) });
 
                 if (globe) {
                     globe.pointOfView({ lat: parseFloat(lat), lng: parseFloat(lon), altitude: 1 }, 2000);
