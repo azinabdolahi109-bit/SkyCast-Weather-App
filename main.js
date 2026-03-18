@@ -21,19 +21,19 @@ let map;
 let marker;
 
 function initMap() {
+    if (typeof L === 'undefined') return;
     map = L.map('map', {
         zoomControl: false,
         attributionControl: false
     }).setView([51.505, -0.09], 10);
 
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png', {
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}.png', {
         maxZoom: 19,
-        attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+        attribution: '&copy; OpenStreetMap'
     }).addTo(map);
 
-    // Force redraw after init
     setTimeout(() => {
-        map.invalidateSize();
+        if (map) map.invalidateSize();
     }, 500);
 }
 
