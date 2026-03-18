@@ -131,25 +131,43 @@ async function handleSearch() {
     const city = cityInput.value.trim();
     if (!city) return;
 
+    // Reset UI
     loader.classList.remove('hidden');
     weatherDisplay.classList.add('hidden');
     emptyState.classList.add('hidden');
     errorState.classList.add('hidden');
 
     try {
+        console.log(`Searching for: ${city}`);
         const coords = await getCoordinates(city);
         if (!coords) {
+            errorState.textContent = "Could not find that city. Try another name.";
             errorState.classList.remove('hidden');
             loader.classList.add('hidden');
             return;
         }
 
+        console.log(`Found coordinates: ${coords.lat}, ${coords.lon}`);
         const weather = await getWeatherData(coords.lat, coords.lon);
-        if (weather) updateUI(weather, coords);
+        
+        if (!weather || !weather.current) {
+            throw new Error("Invalid weather data from API");
+        }
+
+        if (globe) {
+            updateUI(weather, coords);
+            
+            // Success animation
+            weatherDisplay.classList.remove('animate-fade-in');
+            void weatherDisplay.offsetWidth; 
+            weatherDisplay.classList.add('animate-fade-in');
+        } else {
+            throw new Error("3D Globe is not initialized yet.");
+        }
 
     } catch (err) {
-        console.error(err);
-        errorState.textContent = "Something went wrong. Please try again later.";
+        console.error('Search error:', err);
+        errorState.textContent = `Error: ${err.message || 'Something went wrong.'}`;
         errorState.classList.remove('hidden');
     } finally {
         loader.classList.add('hidden');
