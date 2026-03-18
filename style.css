@@ -30,17 +30,14 @@ body {
   position: relative;
 }
 
-#bg-image {
+#globeViz {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
   z-index: 0;
-  background-size: cover;
-  background-position: center;
-  transition: background-image 1.5s ease-in-out;
-  background-image: url('https://images.unsplash.com/photo-1451187580241-538498af0ca0?auto=format&fit=crop&w=1920&q=80'); /* Stunning Earth from space */
+  background: radial-gradient(circle at center, #000, #001); /* High-end space backdrop for the globe */
 }
 
 .overlay {
@@ -50,7 +47,8 @@ body {
   width: 100%;
   height: 100%;
   z-index: 1;
-  background: radial-gradient(circle at center, rgba(15, 23, 42, 0.2), rgba(0, 0, 0, 0.8));
+  pointer-events: none; /* Must not block globe interaction */
+  background: radial-gradient(circle at 10% 10%, rgba(15, 23, 42, 0.2), rgba(0, 0, 0, 0.4));
 }
 
 .app-container {
@@ -274,6 +272,39 @@ header {
   display: flex !important;
   align-items: center;
   justify-content: center;
+}
+
+/* Globe Marker */
+.globe-marker {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  pointer-events: none;
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  background-color: var(--accent-color);
+  border-radius: 50%;
+  box-shadow: 0 0 10px var(--accent-color);
+  z-index: 2;
+}
+
+.pulse {
+  position: absolute;
+  width: 25px;
+  height: 25px;
+  background-color: rgba(56, 189, 248, 0.4);
+  border-radius: 50%;
+  animation: globePulse 2s infinite ease-out;
+  z-index: 1;
+}
+
+@keyframes globePulse {
+  0% { transform: scale(0.5); opacity: 1; }
+  100% { transform: scale(3); opacity: 0; }
 }
 
 @keyframes pulse {
