@@ -312,8 +312,19 @@
                 updateUI(wData, { name: display_name.split(',')[0], lat: parseFloat(lat), lon: parseFloat(lon) });
 
                 if (globe) {
-                    globe.pointOfView({ lat: parseFloat(lat), lng: parseFloat(lon), altitude: 1 }, 2000);
-                    globe.htmlElementsData([{ lat: parseFloat(lat), lng: parseFloat(lon) }]);
+                    // Pause rotation and fly to location
+                    globe.controls().autoRotate = false;
+                    globe.pointOfView({ 
+                        lat: parseFloat(lat), 
+                        lng: parseFloat(lon), 
+                        altitude: 0.6 
+                    }, 2500);
+                    
+                    // Add pulsing marker
+                    globe.htmlElementsData([{ 
+                        lat: parseFloat(lat), 
+                        lng: parseFloat(lon) 
+                    }]);
                 }
                 weatherDisplay.classList.remove('hidden');
                 document.getElementById('empty-state').classList.add('hidden');
