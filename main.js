@@ -23,49 +23,65 @@ const CLOUDS_ALT = 0.004;
 const CLOUDS_ROTATION_SPEED = -0.006; // deg/frame
 
 function initGlobe() {
-    globe = Globe()
-        (document.getElementById('globeViz'))
-        .globeImageUrl('//unpkg.com/three-globe/example/img/earth-blue-marble.jpg')
-        .bumpImageUrl('//unpkg.com/three-globe/example/img/earth-topology.png')
-        .backgroundImageUrl('//unpkg.com/three-globe/example/img/night-sky.png')
-        .showAtmosphere(true)
-        .atmosphereColor('#38bdf8')
-        .atmosphereDaylightAlpha(0.1)
-        .htmlElementsData([]) // For markers
-        .htmlElement(d => {
-            const el = document.createElement('div');
-            el.innerHTML = `
-                <div class="globe-marker">
-                    <div class="dot"></div>
-                    <div class="pulse"></div>
-                </div>`;
-            return el;
+    try {
+        const Globe = window.Globe;
+        const THREE = window.THREE;
+        
+        if (!Globe || !THREE) {
+            console.warn('Globe or Three.js missing. Retrying...');
+            setTimeout(initGlobe, 500);
+            return;
+        }
+
+        globe = Globe()
+            (document.getElementById('globeViz'))
+            .globeImageUrl('//unpkg.com/three-globe/example/img/earth-blue-marble.jpg')
+            .bumpImageUrl('//unpkg.com/three-globe/example/img/earth-topology.png')
+            .backgroundImageUrl('//unpkg.com/three-globe/example/img/night-sky.png')
+            .showAtmosphere(true)
+            .atmosphereColor('#38bdf8')
+            .atmosphereDaylightAlpha(0.1)
+            .htmlElementsData([]) 
+            .htmlElement(d => {
+                const el = document.createElement('div');
+                el.innerHTML = `
+                    <div class="globe-marker">
+                        <div class="dot"></div>
+                        <div class="pulse"></div>
+                    </div>`;
+                return el;
+            });
+
+        // Use MeshBasicMaterial for clouds to work without lighting
+        const clouds = new THREE.Mesh(
+            new THREE.SphereGeometry(globe.getGlobeRadius() * (1 + CLOUDS_ALT), 75, 75),
+            new THREE.MeshBasicMaterial({ 
+                map: new THREE.TextureLoader().load(CLOUDS_IMG_URL), 
+                transparent: true,
+                opacity: 0.6
+            })
+        );
+        globe.scene().add(clouds);
+
+        (function rotateClouds() {
+            clouds.rotation.y += CLOUDS_ROTATION_SPEED * Math.PI / 180;
+            requestAnimationFrame(rotateClouds);
+        })();
+
+        globe.controls().autoRotate = true;
+        globe.controls().autoRotateSpeed = 0.5;
+        globe.pointOfView({ altitude: 2.5 });
+
+        window.addEventListener('resize', () => {
+            globe.width(window.innerWidth);
+            globe.height(window.innerHeight);
         });
 
-    // Custom clouds layer
-    const clouds = new THREE.Mesh(
-        new THREE.SphereGeometry(globe.getGlobeRadius() * (1 + CLOUDS_ALT), 75, 75),
-        new THREE.MeshPhongMaterial({ map: new THREE.TextureLoader().load(CLOUDS_IMG_URL), transparent: true })
-    );
-    globe.scene().add(clouds);
+        console.log('Globe initialized successfully');
 
-    (function rotateClouds() {
-        clouds.rotation.y += CLOUDS_ROTATION_SPEED * Math.PI / 180;
-        requestAnimationFrame(rotateClouds);
-    })();
-
-    // Auto-rotation
-    globe.controls().autoRotate = true;
-    globe.controls().autoRotateSpeed = 0.5;
-
-    // Adjust camera
-    globe.pointOfView({ altitude: 2.5 });
-
-    // Handle Resize
-    window.addEventListener('resize', () => {
-        globe.width(window.innerWidth);
-        globe.height(window.innerHeight);
-    });
+    } catch (e) {
+        console.error('Globe initialization failed:', e);
+    }
 }
 
 const WMO_MAP = {
