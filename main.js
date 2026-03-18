@@ -16,32 +16,37 @@ const windEl = document.getElementById('wind-speed');
 const feelsLikeEl = document.getElementById('feels-like');
 const timezoneEl = document.getElementById('timezone');
 
-// 3D Globe Initialization
-let globe;
-const CLOUDS_IMG_URL = '//unpkg.com/three-globe/example/img/earth-clouds.png';
-const CLOUDS_ALT = 0.004;
-const CLOUDS_ROTATION_SPEED = -0.006; // deg/frame
+// 3D Globe - Global State
+let globe = null;
 
 function initGlobe() {
-    try {
-        const Globe = window.Globe;
-        const THREE = window.THREE;
-        
-        if (!Globe || !THREE) {
-            console.log('Globe or Three.js loading... (retrying in 100ms)');
-            setTimeout(initGlobe, 100);
-            return;
-        }
+    console.log("Starting globe initialization...");
+    const container = document.getElementById('globeViz');
+    
+    if (!container) {
+        console.error("Globe container #globeViz not found!");
+        return;
+    }
 
-        globe = Globe()
-            (document.getElementById('globeViz'))
-            .globeImageUrl('//unpkg.com/three-globe/example/img/earth-blue-marble.jpg')
-            .bumpImageUrl('//unpkg.com/three-globe/example/img/earth-topology.png')
-            .backgroundImageUrl('//unpkg.com/three-globe/example/img/night-sky.png')
+    // Check for libraries
+    if (typeof Globe === 'undefined' || typeof THREE === 'undefined') {
+        console.warn("Libraries not ready (Globe or THREE). Retrying...");
+        setTimeout(initGlobe, 200);
+        return;
+    }
+
+    try {
+        console.log("Libraries detected. Creating globe instance...");
+        
+        // Simple initialization first to ensure it creates the renderer
+        globe = Globe()(container)
+            .globeImageUrl('https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg')
+            .bumpImageUrl('https://unpkg.com/three-globe/example/img/earth-topology.png')
+            .backgroundImageUrl('https://unpkg.com/three-globe/example/img/night-sky.png')
             .showAtmosphere(true)
             .atmosphereColor('#38bdf8')
             .atmosphereDaylightAlpha(0.1)
-            .htmlElementsData([]) 
+            .htmlElementsData([])
             .htmlElement(d => {
                 const el = document.createElement('div');
                 el.innerHTML = `
@@ -52,43 +57,28 @@ function initGlobe() {
                 return el;
             });
 
-        // Use MeshBasicMaterial for clouds to work without lighting
-        const loader = new THREE.TextureLoader();
-        loader.setCrossOrigin('anonymous');
-        const clouds = new THREE.Mesh(
-            new THREE.SphereGeometry(globe.getGlobeRadius() * (1 + CLOUDS_ALT), 75, 75),
-            new THREE.MeshBasicMaterial({ 
-                map: loader.load(CLOUDS_IMG_URL), 
-                transparent: true,
-                opacity: 0.6
-            })
-        );
-        globe.scene().add(clouds);
-
-        (function rotateClouds() {
-            clouds.rotation.y += CLOUDS_ROTATION_SPEED * Math.PI / 180;
-            requestAnimationFrame(rotateClouds);
-        })();
-
+        // Add auto-rotation
         globe.controls().autoRotate = true;
         globe.controls().autoRotateSpeed = 0.5;
         globe.pointOfView({ altitude: 2.5 });
 
-        window.addEventListener('resize', () => {
+        // Force a resize calculation
+        setTimeout(() => {
             globe.width(window.innerWidth);
             globe.height(window.innerHeight);
-        });
+        }, 100);
 
-        // Hide Loading Overlay
+        // Hide overlay once successful
         const loadingOverlay = document.getElementById('loading-overlay');
-        if (loadingOverlay) {
-            loadingOverlay.classList.add('fade-out');
-        }
+        if (loadingOverlay) loadingOverlay.classList.add('fade-out');
+        
+        console.log("Globe initialization complete!");
 
-        console.log('Globe initialized successfully');
-
-    } catch (e) {
-        console.error('Globe initialization failed:', e);
+    } catch (err) {
+        console.error("Critical failure during globe initialization:", err);
+        // Fallback or show error
+        errorState.textContent = "Hardware acceleration (WebGL) might be needed for the 3D Planet.";
+        errorState.classList.remove('hidden');
     }
 }
 
@@ -114,15 +104,21 @@ const WMO_MAP = {
 async function getCoordinates(city) {
     const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(city)}&format=json&limit=1`;
     const response = await fetch(url, { headers: { 'User-Agent': 'SkyCastWeatherApp/1.0' } });
-    if (!response.ok) throw new Error('Search failed');
+    if (!response.ok) throw new Error('Location service error');
     const data = await response.json();
-    return data.length === 0 ? null : { lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon), name: data[0].display_name.split(',')[0] };
+    if (data.length === 0) return null;
+    return {
+        lat: parseFloat(data[0].lat),
+        lon: parseFloat(data[0].lon),
+        name: data[0].display_name.split(',')[0]
+    };
 }
 
 async function getWeatherData(lat, lon) {
     const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,weather_code,wind_speed_10m&timezone=auto`;
     const response = await fetch(url);
-    return response.ok ? await response.json() : null;
+    if (!response.ok) throw new Error('Weather API error');
+    return await response.json();
 }
 
 function updateUI(weather, location) {
@@ -133,18 +129,18 @@ function updateUI(weather, location) {
     dateEl.textContent = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
     tempEl.textContent = Math.round(current.temperature_2m);
     descEl.textContent = wmo.desc;
-    iconEl.alt = wmo.desc;
     iconEl.parentElement.innerHTML = `<span style="font-size: 80px; filter: drop-shadow(0 0 10px rgba(56, 189, 248, 0.4))">${wmo.icon}</span>`;
+    
     humidityEl.textContent = `${current.relative_humidity_2m}%`;
     windEl.textContent = `${current.wind_speed_10m} km/h`;
     feelsLikeEl.textContent = `${Math.round(current.apparent_temperature)}°C`;
     timezoneEl.textContent = weather.timezone_abbreviation;
 
-    // Move Globe to Location
-    globe.pointOfView({ lat: location.lat, lng: location.lon, altitude: 0.8 }, 2000);
-    
-    // Add Marker
-    globe.htmlElementsData([{ lat: location.lat, lng: location.lon }]);
+    // Movement
+    if (globe) {
+        globe.pointOfView({ lat: location.lat, lng: location.lon, altitude: 0.8 }, 2000);
+        globe.htmlElementsData([{ lat: location.lat, lng: location.lon }]);
+    }
 
     weatherDisplay.classList.remove('hidden');
     emptyState.classList.add('hidden');
@@ -155,43 +151,26 @@ async function handleSearch() {
     const city = cityInput.value.trim();
     if (!city) return;
 
-    // Reset UI
     loader.classList.remove('hidden');
     weatherDisplay.classList.add('hidden');
-    emptyState.classList.add('hidden');
     errorState.classList.add('hidden');
 
     try {
-        console.log(`Searching for: ${city}`);
         const coords = await getCoordinates(city);
         if (!coords) {
-            errorState.textContent = "Could not find that city. Try another name.";
+            errorState.textContent = "City not found.";
             errorState.classList.remove('hidden');
-            loader.classList.add('hidden');
             return;
         }
 
-        console.log(`Found coordinates: ${coords.lat}, ${coords.lon}`);
         const weather = await getWeatherData(coords.lat, coords.lon);
+        if (!globe) throw new Error("3D Planet is still building...");
         
-        if (!weather || !weather.current) {
-            throw new Error("Invalid weather data from API");
-        }
-
-        if (globe) {
-            updateUI(weather, coords);
-            
-            // Success animation
-            weatherDisplay.classList.remove('animate-fade-in');
-            void weatherDisplay.offsetWidth; 
-            weatherDisplay.classList.add('animate-fade-in');
-        } else {
-            throw new Error("3D Globe is not initialized yet.");
-        }
+        updateUI(weather, coords);
 
     } catch (err) {
-        console.error('Search error:', err);
-        errorState.textContent = `Error: ${err.message || 'Something went wrong.'}`;
+        console.error(err);
+        errorState.textContent = err.message || "An error occurred.";
         errorState.classList.remove('hidden');
     } finally {
         loader.classList.add('hidden');
@@ -201,7 +180,11 @@ async function handleSearch() {
 searchBtn.addEventListener('click', handleSearch);
 cityInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') handleSearch(); });
 
-window.addEventListener('load', () => {
-    initGlobe();
-    cityInput.focus();
+// Global load
+window.addEventListener('load', initGlobe);
+window.addEventListener('resize', () => {
+    if (globe) {
+        globe.width(window.innerWidth);
+        globe.height(window.innerHeight);
+    }
 });
