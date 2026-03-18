@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SkyCast - Modern Weather App</title>
+    <meta name="description" content="A premium, state-of-the-art weather forecasting application with real-time updates and stunning visuals.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obOTOvM=" crossorigin="" />
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="map" style="width: 100%; height: 100vh;"></div>
+    <div class="app-container">
+        <header>
+            <div class="search-box">
+                <input type="text" id="city-input" placeholder="Search for a city..." spellcheck="false">
+                <button id="search-btn">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                </button>
+            </div>
+        </header>
+
+        <main id="weather-display" class="hidden">
+            <div class="weather-card animate-fade-in">
+                <div class="location-info">
+                    <h1 id="city-name">--</h1>
+                    <p id="current-date">--</p>
+                </div>
+                
+                <div class="temp-section">
+                    <div class="weather-icon-container">
+                        <img id="weather-icon" src="" alt="Weather Icon" class="glow-effect">
+                    </div>
+                    <div class="temp-details">
+                        <span id="temperature">--</span><span class="unit">°C</span>
+                        <p id="weather-description">--</p>
+                    </div>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-icon">💧</div>
+                        <div class="stat-info">
+                            <span id="humidity">--</span>
+                            <p>Humidity</p>
+                        </div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-icon">💨</div>
+                        <div class="stat-info">
+                            <span id="wind-speed">--</span>
+                            <p>Wind Speed</p>
+                        </div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-icon">🌡️</div>
+                        <div class="stat-info">
+                            <span id="feels-like">--</span>
+                            <p>Feels Like</p>
+                        </div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-icon">🕒</div>
+                        <div class="stat-info">
+                            <span id="timezone">--</span>
+                            <p>Timezone</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <section id="empty-state" class="animate-fade-in">
+            <div class="hero-content">
+                <h2>Welcome to SkyCast</h2>
+                <p>Enter a city name to explore current weather conditions.</p>
+            </div>
+        </section>
+
+        <section id="error-state" class="hidden animate-shake">
+            <p>Could not find city. Please try again.</p>
+        </section>
+
+        <div id="loader" class="hidden">
+            <div class="spinner"></div>
+        </div>
+    </div>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script src="main.js"></script>
+</body>
+</html>

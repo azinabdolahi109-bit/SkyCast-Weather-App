@@ -1,0 +1,13 @@
+{
+  "name": "skycast-weather-app",
+  "version": "1.0.0",
+  "description": "A premium, state-of-the-art weather forecasting application.",
+  "main": "index.html",
+  "scripts": {
+    "start": "serve .",
+    "dev": "serve ."
+  },
+  "dependencies": {
+    "serve": "^14.2.4"
+  }
+}
