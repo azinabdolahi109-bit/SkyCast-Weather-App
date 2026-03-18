@@ -12,6 +12,13 @@
 </head>
 <body>
     <div id="globeViz"></div>
+    <div id="loading-overlay">
+        <div class="loader-content">
+            <div class="spinner"></div>
+            <h1>Initializing Planet Earth...</h1>
+            <p>Gathering satellite data and weather patterns</p>
+        </div>
+    </div>
     <div class="overlay"></div>
     <div class="app-container">
         <header>
@@ -88,8 +95,8 @@
             <div class="spinner"></div>
         </div>
     </div>
-    <script src="//unpkg.com/three"></script>
-    <script src="//unpkg.com/globe.gl"></script>
+    <script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
+    <script src="https://unpkg.com/globe.gl@2.32.0/dist/globe.gl.min.js"></script>
     <script src="main.js"></script>
 </body>
 </html>

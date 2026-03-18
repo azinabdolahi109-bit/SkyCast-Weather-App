@@ -40,6 +40,45 @@ body {
   background: radial-gradient(circle at center, #000, #001); /* High-end space backdrop for the globe */
 }
 
+#loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at center, #0f172a, #000);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  transition: opacity 1s ease-out, visibility 1s;
+}
+
+#loading-overlay.fade-out {
+  opacity: 0;
+  visibility: hidden;
+}
+
+.loader-content {
+  text-align: center;
+}
+
+.loader-content h1 {
+  font-size: 2rem;
+  margin-top: 1.5rem;
+  letter-spacing: 2px;
+  background: linear-gradient(to right, #38bdf8, #f8fafc);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.loader-content p {
+  color: var(--text-secondary);
+  font-weight: 300;
+  margin-top: 0.5rem;
+}
+
 .overlay {
   position: fixed;
   top: 0;

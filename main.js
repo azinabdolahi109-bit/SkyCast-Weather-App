@@ -28,8 +28,8 @@ function initGlobe() {
         const THREE = window.THREE;
         
         if (!Globe || !THREE) {
-            console.warn('Globe or Three.js missing. Retrying...');
-            setTimeout(initGlobe, 500);
+            console.log('Globe or Three.js loading... (retrying in 100ms)');
+            setTimeout(initGlobe, 100);
             return;
         }
 
@@ -53,10 +53,12 @@ function initGlobe() {
             });
 
         // Use MeshBasicMaterial for clouds to work without lighting
+        const loader = new THREE.TextureLoader();
+        loader.setCrossOrigin('anonymous');
         const clouds = new THREE.Mesh(
             new THREE.SphereGeometry(globe.getGlobeRadius() * (1 + CLOUDS_ALT), 75, 75),
             new THREE.MeshBasicMaterial({ 
-                map: new THREE.TextureLoader().load(CLOUDS_IMG_URL), 
+                map: loader.load(CLOUDS_IMG_URL), 
                 transparent: true,
                 opacity: 0.6
             })
@@ -76,6 +78,12 @@ function initGlobe() {
             globe.width(window.innerWidth);
             globe.height(window.innerHeight);
         });
+
+        // Hide Loading Overlay
+        const loadingOverlay = document.getElementById('loading-overlay');
+        if (loadingOverlay) {
+            loadingOverlay.classList.add('fade-out');
+        }
 
         console.log('Globe initialized successfully');
 
