@@ -18,22 +18,22 @@ const feelsLikeEl = document.getElementById('feels-like');
 const timezoneEl = document.getElementById('timezone');
 
 const WMO_MAP = {
-    0: { desc: "Clear Sky", icon: "☀️", imgId: "1464822759023-fed622ff2c3b" },
-    1: { desc: "Mainly Clear", icon: "🌤️", imgId: "1475924156734-496f6cac6ec1" },
-    2: { desc: "Partly Cloudy", icon: "⛅", imgId: "1534067783941-43282424adaa" },
-    3: { desc: "Overcast", icon: "☁️", imgId: "1483977399921-6cfcf3a4d8d6" },
-    45: { desc: "Fog", icon: "🌫️", imgId: "1541675154750-0444c7d51e8b" },
-    48: { desc: "Depositing Rime Fog", icon: "🌫️", imgId: "1485236715598-ada2400309e6" },
-    51: { desc: "Light Drizzle", icon: "🌦️", imgId: "1541919329513-35f7af297129" },
-    53: { desc: "Moderate Drizzle", icon: "🌦️", imgId: "1541919329513-35f7af297129" },
-    55: { desc: "Dense Drizzle", icon: "🌦️", imgId: "1534274988757-a28bf1f53c17" },
-    61: { desc: "Slight Rain", icon: "🌧️", imgId: "1515694346937-94d85ed41d6f" },
-    63: { desc: "Moderate Rain", icon: "🌧️", imgId: "1515694346937-94d85ed41d6f" },
-    65: { desc: "Heavy Rain", icon: "⛈️", imgId: "1534274988757-a28bf1f53c17" },
-    71: { desc: "Slight Snow", icon: "🌨️", imgId: "1483921020237-2ff51e8e4b22" },
-    73: { desc: "Moderate Snow", icon: "🌨️", imgId: "1483921020237-2ff51e8e4b22" },
-    75: { desc: "Heavy Snow", icon: "❄️", imgId: "1483664845534-750c74127ce1" },
-    95: { desc: "Thunderstorm", icon: "⚡", imgId: "1605727282300-24430156d81b" },
+    0: { desc: "Clear Sky", icon: "☀️", imgId: "1451187580241-538498af0ca0" },
+    1: { desc: "Mainly Clear", icon: "🌤️", imgId: "1446776811953-b23d57bd21aa" },
+    2: { desc: "Partly Cloudy", icon: "⛅", imgId: "1446776811953-b23d57bd21aa" },
+    3: { desc: "Overcast", icon: "☁️", imgId: "1446776811953-b23d57bd21aa" },
+    45: { desc: "Fog", icon: "🌫️", imgId: "1483366774565-83011e144863" },
+    48: { desc: "Depositing Rime Fog", icon: "🌫️", imgId: "1483366774565-83011e144863" },
+    51: { desc: "Light Drizzle", icon: "🌦️", imgId: "1451188502534-ed55418b32cf" },
+    53: { desc: "Moderate Drizzle", icon: "🌦️", imgId: "1451188502534-ed55418b32cf" },
+    55: { desc: "Dense Drizzle", icon: "🌦️", imgId: "1451188502534-ed55418b32cf" },
+    61: { desc: "Slight Rain", icon: "🌧️", imgId: "1451188502534-ed55418b32cf" },
+    63: { desc: "Moderate Rain", icon: "🌧️", imgId: "1451188502534-ed55418b32cf" },
+    65: { desc: "Heavy Rain", icon: "⛈️", imgId: "1605727282300-24430156d81b" },
+    71: { desc: "Slight Snow", icon: "🌨️", imgId: "1441750545187-5f7222540307" },
+    73: { desc: "Moderate Snow", icon: "🌨️", imgId: "1441750545187-5f7222540307" },
+    75: { desc: "Heavy Snow", icon: "❄️", imgId: "1441750545187-5f7222540307" },
+    95: { desc: "Thunderstorm", icon: "⚡", imgId: "1451186716156-3de7af10dfba" },
 };
 
 async function getCoordinates(city) {
