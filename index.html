@@ -3,32 +3,100 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SkyCast - Modern Weather App</title>
-    <meta name="description" content="A premium, state-of-the-art weather forecasting application with real-time updates and stunning visuals.">
+    <title>SkyCast - 3D Planet Weather</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
+    <style>
+        :root {
+            --primary-bg: #0f172a;
+            --card-bg: rgba(15, 23, 42, 0.8);
+            --card-border: rgba(255, 255, 255, 0.1);
+            --accent-color: #38bdf8;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --error-color: #f43f5e;
+            --shadow-color: rgba(0, 0, 0, 0.5);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { height: 100%; overflow: hidden; font-family: 'Outfit', sans-serif; background: #000; color: #fff; }
+
+        #globeViz { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; background: radial-gradient(circle at center, #0a0f1e, #000); }
+        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; background: radial-gradient(circle at 10% 10%, rgba(15, 23, 42, 0.1), rgba(0, 0, 0, 0.5)); }
+
+        #loading-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000;
+            display: flex; justify-content: center; align-items: center; z-index: 1000;
+            transition: opacity 1s ease-out, visibility 1s;
+        }
+        #loading-overlay.fade-out { opacity: 0; visibility: hidden; }
+        .loader-content { text-align: center; }
+        .loader-content h1 { font-size: 2rem; margin: 1.5rem 0; background: linear-gradient(to right, #38bdf8, #fff); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+        
+        #skip-btn {
+            margin-top: 2rem; padding: 0.8rem 1.5rem; background: rgba(255,255,255,0.1); 
+            border: 1px solid rgba(255,255,255,0.2); color: #fff; border-radius: 30px; 
+            cursor: pointer; display: none; transition: 0.3s;
+        }
+        #skip-btn:hover { background: rgba(255,255,255,0.2); }
+
+        .app-container {
+            position: fixed; top: 2rem; left: 2rem; width: 380px; z-index: 100;
+            background: var(--card-bg); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
+            border: 1px solid var(--card-border); border-radius: 28px; padding: 1.5rem;
+            box-shadow: 0 40px 100px var(--shadow-color);
+        }
+
+        .search-box { display: flex; background: rgba(255,255,255,0.05); border: 1px solid var(--card-border); border-radius: 16px; padding: 0.4rem; margin-bottom: 1.5rem; }
+        .search-box input { background: transparent; border: none; outline: none; color: #fff; padding: 0.6rem 1rem; width: 100%; font-size: 1rem; }
+        .search-box button { background: var(--accent-color); color: #000; border: none; border-radius: 12px; padding: 0.6rem; cursor: pointer; }
+
+        .weather-card { text-align: center; }
+        .location-info h1 { font-size: 2rem; margin-bottom: 0.2rem; }
+        .location-info p { color: var(--text-secondary); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; }
+        .temp-section { margin: 1.5rem 0; }
+        #temperature { font-size: 4rem; font-weight: 700; }
+        .unit { font-size: 1.5rem; color: var(--text-secondary); vertical-align: super; }
+        #weather-description { font-size: 1.2rem; color: var(--accent-color); text-transform: capitalize; }
+
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; margin-top: 1.5rem; }
+        .stat-item { background: rgba(255,255,255,0.03); padding: 0.8rem; border-radius: 16px; border: 1px solid var(--card-border); display: flex; align-items: center; }
+        .stat-icon { font-size: 1.2rem; margin-right: 0.6rem; }
+        .stat-info span { display: block; font-weight: 600; font-size: 1rem; }
+        .stat-info p { font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase; }
+
+        #loader { margin: 1rem 0; text-align: center; }
+        .spinner { width: 30px; height: 30px; border: 3px solid rgba(255,255,255,0.1); border-top-color: var(--accent-color); border-radius: 50%; animation: spin 1s infinite linear; margin: 0 auto; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        
+        .hidden { display: none !important; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade-in { animation: fadeIn 0.8s ease-out forwards; }
+
+        .globe-marker { position: relative; pointer-events: none; }
+        .dot { width: 10px; height: 10px; background: var(--accent-color); border-radius: 50%; box-shadow: 0 0 10px var(--accent-color); }
+        .pulse { position: absolute; top: -7.5px; left: -7.5px; width: 25px; height: 25px; background: rgba(56, 189, 248, 0.4); border-radius: 50%; animation: globePulse 2s infinite; }
+        @keyframes globePulse { 0% { transform: scale(0.5); opacity: 1; } 100% { transform: scale(2.5); opacity: 0; } }
+    </style>
 </head>
 <body>
     <div id="globeViz"></div>
     <div id="loading-overlay">
         <div class="loader-content">
             <div class="spinner"></div>
-            <h1>Initializing Planet Earth...</h1>
-            <p>Gathering satellite data and weather patterns</p>
+            <h1>Building Planet...</h1>
+            <p id="loading-msg">Fetching satellite assets</p>
+            <button id="skip-btn" onclick="useStaticFallback()">Skip to Static Dashboard</button>
         </div>
     </div>
     <div class="overlay"></div>
+
     <div class="app-container">
-        <header>
-            <div class="search-box">
-                <input type="text" id="city-input" placeholder="Search for a city..." spellcheck="false">
-                <button id="search-btn">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                </button>
-            </div>
-        </header>
+        <div class="search-box">
+            <input type="text" id="city-input" placeholder="Enter city..." spellcheck="false">
+            <button id="search-btn">🚀</button>
+        </div>
 
         <main id="weather-display" class="hidden">
             <div class="weather-card animate-fade-in">
@@ -36,67 +104,128 @@
                     <h1 id="city-name">--</h1>
                     <p id="current-date">--</p>
                 </div>
-                
                 <div class="temp-section">
-                    <div class="weather-icon-container">
-                        <img id="weather-icon" src="" alt="Weather Icon" class="glow-effect">
-                    </div>
-                    <div class="temp-details">
-                        <span id="temperature">--</span><span class="unit">°C</span>
-                        <p id="weather-description">--</p>
-                    </div>
+                    <div id="weather-icon-box" style="font-size: 60px; margin-bottom: 0.5rem;">❓</div>
+                    <span id="temperature">--</span><span class="unit">°C</span>
+                    <p id="weather-description">--</p>
                 </div>
-
                 <div class="stats-grid">
-                    <div class="stat-item">
-                        <div class="stat-icon">💧</div>
-                        <div class="stat-info">
-                            <span id="humidity">--</span>
-                            <p>Humidity</p>
-                        </div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-icon">💨</div>
-                        <div class="stat-info">
-                            <span id="wind-speed">--</span>
-                            <p>Wind Speed</p>
-                        </div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-icon">🌡️</div>
-                        <div class="stat-info">
-                            <span id="feels-like">--</span>
-                            <p>Feels Like</p>
-                        </div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-icon">🕒</div>
-                        <div class="stat-info">
-                            <span id="timezone">--</span>
-                            <p>Timezone</p>
-                        </div>
-                    </div>
+                    <div class="stat-item"><div class="stat-icon">💧</div><div class="stat-info"><span id="humidity">--</span><p>Humidity</p></div></div>
+                    <div class="stat-item"><div class="stat-icon">💨</div><div class="stat-info"><span id="wind-speed">--</span><p>Wind</p></div></div>
+                    <div class="stat-item"><div class="stat-icon">🌡️</div><div class="stat-info"><span id="feels-like">--</span><p>Feels</p></div></div>
+                    <div class="stat-item"><div class="stat-icon">🕒</div><div class="stat-info"><span id="timezone">--</span><p>Zone</p></div></div>
                 </div>
             </div>
         </main>
 
-        <section id="empty-state" class="animate-fade-in">
-            <div class="hero-content">
-                <h2>Welcome to SkyCast</h2>
-                <p>Enter a city name to explore current weather conditions.</p>
-            </div>
+        <section id="empty-state">
+            <p style="text-align: center; color: var(--text-secondary);">Your window to the world. Search for a city to begin.</p>
         </section>
 
-        <section id="error-state" class="hidden animate-shake">
-            <p>Could not find city. Please try again.</p>
-        </section>
+        <section id="error-state" class="hidden" style="color: var(--error-color); text-align: center; margin-top: 1rem;"></section>
 
-        <div id="loader" class="hidden">
-            <div class="spinner"></div>
-        </div>
+        <div id="loader" class="hidden"><div class="spinner"></div></div>
     </div>
+
+    <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/globe.gl@2.32.0/dist/globe.gl.min.js"></script>
-    <script src="main.js"></script>
+    
+    <script>
+        let globe = null;
+        let retryCount = 0;
+        const WMO_MAP = {
+            0: { desc: "Clear Sky", icon: "☀️" }, 1: { desc: "Mainly Clear", icon: "🌤️" },
+            2: { desc: "Partly Cloudy", icon: "⛅" }, 3: { desc: "Overcast", icon: "☁️" },
+            45: { desc: "Fog", icon: "🌫️" }, 61: { desc: "Rain", icon: "🌧️" },
+            95: { desc: "Storm", icon: "⚡" }
+        };
+
+        function initGlobe() {
+            const container = document.getElementById('globeViz');
+            if (typeof Globe === 'undefined' || typeof THREE === 'undefined') {
+                retryCount++;
+                if (retryCount > 25) document.getElementById('skip-btn').style.display = 'inline-block';
+                if (retryCount < 60) { setTimeout(initGlobe, 200); return; }
+                useStaticFallback(); return;
+            }
+            try {
+                globe = Globe()(container)
+                    .globeImageUrl('https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg')
+                    .bumpImageUrl('https://unpkg.com/three-globe/example/img/earth-topology.png')
+                    .backgroundImageUrl('https://unpkg.com/three-globe/example/img/night-sky.png')
+                    .showAtmosphere(true).atmosphereColor('#38bdf8').atmosphereDaylightAlpha(0.1)
+                    .htmlElementsData([]).htmlElement(() => {
+                        const el = document.createElement('div');
+                        el.className = 'globe-marker';
+                        el.innerHTML = '<div class="dot"></div><div class="pulse"></div>';
+                        return el;
+                    });
+                globe.controls().autoRotate = true;
+                globe.controls().autoRotateSpeed = 0.5;
+                setTimeout(() => { globe.width(window.innerWidth); globe.height(window.innerHeight); hideOverlay(); }, 500);
+            } catch (e) { console.error(e); useStaticFallback(); }
+        }
+
+        function useStaticFallback() {
+            document.getElementById('globeViz').style.backgroundImage = "url('https://images.unsplash.com/photo-1451187580241-538498af0ca0?auto=format&fit=crop&w=1920&q=80')";
+            document.getElementById('globeViz').style.backgroundSize = "cover";
+            hideOverlay();
+        }
+
+        function hideOverlay() { document.getElementById('loading-overlay').classList.add('fade-out'); }
+
+        async function handleSearch() {
+            const city = document.getElementById('city-input').value.trim();
+            if (!city) return;
+            const loader = document.getElementById('loader');
+            const weatherDisplay = document.getElementById('weather-display');
+            const errorState = document.getElementById('error-state');
+            
+            loader.classList.remove('hidden');
+            weatherDisplay.classList.add('hidden');
+            errorState.classList.add('hidden');
+
+            try {
+                const geoUrl = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(city)}&format=json&limit=1`;
+                const gRes = await fetch(geoUrl, { headers: { 'User-Agent': 'SkyCast' } });
+                const gData = await gRes.json();
+                if (!gData.length) throw new Error("City not found");
+
+                const { lat, lon, display_name } = gData[0];
+                const wUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m&timezone=auto`;
+                const wRes = await fetch(wUrl);
+                const wData = await wRes.json();
+                
+                const current = wData.current;
+                const info = WMO_MAP[current.weather_code] || { desc: "Unknown", icon: "❓" };
+
+                document.getElementById('city-name').textContent = display_name.split(',')[0];
+                document.getElementById('current-date').textContent = new Date().toLocaleDateString();
+                document.getElementById('temperature').textContent = Math.round(current.temperature_2m);
+                document.getElementById('weather-icon-box').textContent = info.icon;
+                document.getElementById('weather-description').textContent = info.desc;
+                document.getElementById('humidity').textContent = current.relative_humidity_2m + '%';
+                document.getElementById('wind-speed').textContent = current.wind_speed_10m + 'km/h';
+                document.getElementById('feels-like').textContent = Math.round(current.apparent_temperature) + '°C';
+                document.getElementById('timezone').textContent = wData.timezone_abbreviation;
+
+                if (globe) {
+                    globe.pointOfView({ lat: parseFloat(lat), lng: parseFloat(lon), altitude: 1 }, 2000);
+                    globe.htmlElementsData([{ lat: parseFloat(lat), lng: parseFloat(lon) }]);
+                }
+                weatherDisplay.classList.remove('hidden');
+                document.getElementById('empty-state').classList.add('hidden');
+            } catch (err) {
+                errorState.textContent = err.message;
+                errorState.classList.remove('hidden');
+            } finally { loader.classList.add('hidden'); }
+        }
+
+        document.getElementById('search-btn').onclick = handleSearch;
+        document.getElementById('city-input').onkeypress = (e) => { if(e.key==='Enter') handleSearch(); };
+        window.onload = initGlobe;
+        window.onresize = () => { if(globe) { globe.width(window.innerWidth); globe.height(window.innerHeight); }};
+    </script>
 </body>
 </html>
